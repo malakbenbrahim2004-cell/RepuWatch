@@ -1,0 +1,39 @@
+
+# Remplacer le contenu du .gitignore
+@"
+# Venv Python
+backend/venv/
+venv/
+
+# Cache Python
+backend/__pycache__/
+__pycache__/
+*.pyc
+*.pyo
+
+# Modeles IA lourds
+*.dll
+*.bin
+*.safetensors
+*.pt
+*.pth
+backend/venv/Lib/
+backend/venv/Scripts/
+
+# HuggingFace cache
+.cache/
+
+# Variables d environnement
+.env
+backend/.env
+
+# Node
+frontend/node_modules/
+node_modules/
+frontend/.next/
+.next/
+
+# OS
+.DS_Store
+Thumbs.db
+"@ | Out-File -FilePath .gitignore -Encoding utf8
