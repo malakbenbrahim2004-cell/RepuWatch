@@ -29,6 +29,21 @@ class Article(Base):
     query_used   = Column(Text)
     is_alerted   = Column(Boolean, default=False)
 
+class DarkwebFinding(Base):
+    __tablename__ = 'darkweb_findings'
+    id        = Column(Integer, primary_key=True)
+    title     = Column(Text)
+    url       = Column(Text, unique=True)
+    snippet   = Column(Text)
+    source    = Column(String(50))
+    severity  = Column(String(20))
+    keyword   = Column(String(100))
+    found_at  = Column(DateTime, default=func.now())
+    is_alerted= Column(Boolean, default=False)
+
+# Puis dans le terminal VS Code :
+# python -c "from database import engine; from models import DarkwebFinding, Base; Base.metadata.create_all(engine); print('Table créée ✅')"
+
 class ReputationScore(Base):
     __tablename__   = 'reputation_scores'
     id              = Column(Integer, primary_key=True)

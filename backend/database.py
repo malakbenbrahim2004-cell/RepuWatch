@@ -6,8 +6,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DB_URL = (
-    f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
-    f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+    f"postgresql://{os.getenv('DB_USER', 'repuwatch_user')}:"
+    f"{os.getenv('DB_PASSWORD', 'repuwatch_pass')}@"
+    f"{os.getenv('DB_HOST', 'localhost')}:"
+    f"{os.getenv('DB_PORT', '5432')}/"
+    f"{os.getenv('DB_NAME', 'repuwatch')}"
+    f"?client_encoding=utf8"
 )
 
 engine  = create_engine(DB_URL, pool_size=5, max_overflow=10)

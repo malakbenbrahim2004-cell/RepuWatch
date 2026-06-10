@@ -12,18 +12,71 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import Source, Article
 
+from config import HS_CORE, HS_SUBSIDIARIES, MONCEF_VARIANTS, BUSINESS_CONTEXT
+
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # ── Requêtes de recherche ─────────────────────────────────────────────────────
+# Dans collector.py — remplace SEARCH_QUERIES
+
 SEARCH_QUERIES = [
-    '"H&S Holding"',
-    '"Moncef Belkhayat"',
-    '"H&S Invest"',
+    # Entités principales
+    '"H&S Holding" Maroc',
     '"H&S Group" Maroc',
+    '"H&S Invest" Maroc',
+    '"Moncef Belkhayat"',
     '"Belkhayat" holding maroc',
+
+    # Filiales distribution & santé
+    '"Dislog Group" Maroc',
+    '"Dislog Group" acquisition OR partenariat OR croissance',
+    '"Dislog Medical" OR "DDM Dislog" OR "Dislog Dispositifs Médicaux"',
+    '"Dislog Europe"',
+    '"Dislog Santé"',
+
+    # Médical
+    '"Megaflex" Maroc',
+    '"Eramedic" Maroc',
+    '"Farmalac" Maroc',
+    '"Steripharma" Maroc',
+    '"Afrobiomedic" Maroc',
+    '"KPH" Dislog OR Belkhayat',
+    '"HMI" Dislog OR Belkhayat',
+
+    # Logistique
+    '"BLS" "H&S" OR Belkhayat',
+    '"CasaHub" Maroc',
+    '"La Voie Express" Maroc',
+    '"Logiprod" Maroc',
+    '"Transline" Maroc',
+
+    # Retail & Food
+    '"Venezia Ice" Maroc',
+    '"Mr Bricolage Maroc"',
+    '"One Retail" Belkhayat OR "H&S"',
+    '"BeautyForYou" OR "Beauty4you" Maroc',
+
+    # Digital & Fintech
+    '"Chari" Belkhayat OR "H&S"',
+    '"ChariPay" Maroc',
+
+    # Cosmétique
+    '"Avon" Belkhayat OR "H&S" OR Dislog',
+
+    # Media
+    '"WB Africa" Maroc',
+    '"Horizon Press" Belkhayat',
+
+    # Immobilier
+    '"Kaya Immobilier" Maroc',
+    '"Gidna" Belkhayat OR "H&S"',
+
+    # Sites marocains ciblés
     '"H&S Holding" site:medias24.com OR site:telquel.ma OR site:leconomiste.com',
     '"Moncef Belkhayat" site:hespress.com OR site:le360.ma OR site:goud.ma',
+    '"Dislog" site:medias24.com OR site:leconomiste.com OR site:challenge.ma',
 ]
 
 # ── Constantes de filtrage ────────────────────────────────────────────────────
@@ -107,27 +160,36 @@ def is_generic_title(title: str) -> bool:
 
 
 def is_relevant_strict(title: str, text: str) -> bool:
-    """
-    Filtre strict à deux niveaux :
-    1. Le texte doit mentionner H&S ou Moncef Belkhayat
-    2. Le texte doit aussi avoir un contexte business marocain
-    """
     combined = normalize(title + " " + text)
 
-    has_hs      = any(normalize(k) in combined for k in HS_CORE)
-    has_moncef  = MONCEF_FULL in combined
-    has_context = any(normalize(b) in combined for b in BUSINESS_CONTEXT)
+    # Vérifier entités principales
+    has_hs       = any(normalize(k) in combined for k in HS_CORE)
+    has_moncef   = any(normalize(k) in combined for k in MONCEF_VARIANTS)
+    has_filiale  = any(normalize(k) in combined for k in HS_SUBSIDIARIES)
+    has_context  = any(normalize(k) in combined for k in BUSINESS_CONTEXT)
 
-    # Cas 1 : H&S + contexte business → OK
+    # H&S principal + contexte business
     if has_hs and has_context:
         return True
 
-    # Cas 2 : Moncef Belkhayat (prénom + nom complet) + contexte → OK
+    # Moncef Belkhayat + contexte business
     if has_moncef and has_context:
         return True
 
-    # Cas 3 : H&S + Moncef ensemble → OK même sans contexte explicite
+    # H&S + Moncef ensemble
     if has_hs and has_moncef:
+        return True
+
+    # Filiale + contexte business marocain (Dislog, BLS, Chari...)
+    if has_filiale and has_context:
+        return True
+
+    # Filiale + H&S ensemble
+    if has_filiale and has_hs:
+        return True
+
+    # Filiale + Moncef ensemble
+    if has_filiale and has_moncef:
         return True
 
     return False

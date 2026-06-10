@@ -8,28 +8,60 @@ ANTHROPIC_KEY   = os.getenv('ANTHROPIC_API_KEY')
 REDIS_URL       = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 ALERT_THRESHOLD = int(os.getenv('ALERT_THRESHOLD', 40))
 
-# Mots-clés de surveillance (modifier avec le vrai nom du président)
-KEYWORDS = [
-    '"H&S Group"',
-    '"H&S Invest"',
-    '"H&S Holding"',
-    '"H&S Holding" Maroc',
-    '"H&S Holding" Casablanca',
-    '"Moncef Belkhayat"', 
-    '"Moncef Belkhayat" H&S',       # ← remplacer NOM_PRESIDENT
-    '"Moncef Belkhayat" Maroc',
-    'H&S هولدينغ المغرب',         # arabe
-    '"H&S Holding" Morocco',        # anglais
+# Mots-clés — simples et directs, le CX filtre déjà sur les bons sites
+
+# config.py — Mots-clés RepuWatch FINAL
+
+# Entités principales H&S Group
+HS_CORE = [
+    "h&s holding", "h&s group", "h&s invest", "h&s retail",
+    "hs invest holding", "hs group", "hs holding",
 ]
 
-# Flux RSS des grands médias marocains (sources fiables connues)
-RSS_FEEDS = [
-    'https://www.medias24.com/rss',
-    'https://www.leconomiste.com/rss.xml',
-    'https://telquel.ma/feed/',
-    'https://www.le360.ma/rss.xml',
-    'https://leseco.ma/feed/',
-    'https://challenge.ma/feed/',
+# Filiales et marques surveillées
+HS_SUBSIDIARIES = [
+    # Distribution & Santé
+    "dislog", "dislog group", "dislog europe", "dislog santé",
+    "dislog medical devices", "dmd dislog", "ddm dislog",
+    # Médical
+    "megaflex", "eramedic", "farmalac", "kph", "hmi",
+    "steripharma", "afrobiomedic", "dislog santé",
+    # Logistique
+    "bls", "casahub", "logiprod", "marbar", "transline",
+    "la voie express",
+    # Retail & Food
+    "venezia ice", "mr bricolage maroc", "one retail", "oneretail",
+    "beautyforyou", "beauty4you",
+    # Digital & Fintech
+    "chari", "charipay",
+    # Cosmétique
+    "avon maroc",
+    # Media
+    "wb africa", "horizon press",
+    # Immobilier
+    "kaya immobilier", "gidna",
 ]
 
-LANGUAGES = ['fr', 'ar', 'en']
+# Personne clé
+MONCEF_VARIANTS = [
+    "moncef belkhayat", "منصف البلخياط ",
+]
+
+# Contexte business marocain (pour filtrage)
+BUSINESS_CONTEXT = [
+    "holding", "group", "invest", "acquisition", "rachat",
+    "franchise", "partenariat", "bourse", "ipo", "capital",
+    "fonds", "dirhams", "filiale", "distribution", "expansion",
+    "croissance", "milliard", "maroc", "morocco", "casablanca",
+    "logistique", "santé", "médical", "retail", "fintech",
+]
+
+# Domaines à exclure (hors sujet)
+EXCLUDED_DOMAINS = [
+    "facebook.com", "instagram.com", "tiktok.com", "youtube.com",
+    "t.co", "scam.sg", "hs-investment.eu", "hsholdinggroup.com",
+    "booking.com", "tripadvisor.com", "airbnb.com", "hs-le-pallet.fr",
+]
+
+# Langues surveillées
+LANGUAGES = ["fr", "ar", "en"]
