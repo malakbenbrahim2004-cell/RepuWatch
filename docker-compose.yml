@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+
+  repuwatch-db:
+    image: postgres:16-alpine
+    container_name: repuwatch-db
+    environment:
+      POSTGRES_DB: repuwatch
+      POSTGRES_USER: repuwatch_user
+      POSTGRES_PASSWORD: repuwatch_pass
+    volumes:
+      - repuwatch_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+
+  repuwatch-redis:
+    image: redis:7-alpine
+    container_name: repuwatch-redis
+    ports:
+      - "6380:6379"
+    restart: unless-stopped
+
+  repuwatch-backend:
+    build: ./backend
+    container_name: repuwatch-backend
+    environment:
+      DB_HOST: repuwatch-db
+      DB_PORT: 5432
+      DB_NAME: repuwatch
+      DB_USER: repuwatch_user
+      DB_PASSWORD: repuwatch_pass
+      REDIS_URL: redis://repuwatch-redis:6379/0
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: malakbenbrahim2004@gmail.com
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      ALERT_RECIPIENT: malakbenbrahim2004@gmail.com
+      ALERT_THRESHOLD: 40
+    ports:
+      - "8000:8000"
+    depends_on:
+      - repuwatch-db
+      - repuwatch-redis
+    restart: unless-stopped
+
+  repuwatch-celery:
+    build: ./backend
+    container_name: repuwatch-celery
+    command: celery -A tasks worker --loglevel=info -P solo
+    environment:
+      DB_HOST: repuwatch-db
+      DB_PORT: 5432
+      DB_NAME: repuwatch
+      DB_USER: repuwatch_user
+      DB_PASSWORD: repuwatch_pass
+      REDIS_URL: redis://repuwatch-redis:6379/0
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: malakbenbrahim2004@gmail.com
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      ALERT_RECIPIENT: malakbenbrahim2004@gmail.com
+      ALERT_THRESHOLD: 40
+    depends_on:
+      - repuwatch-db
+      - repuwatch-redis
+    restart: unless-stopped
+
+  repuwatch-celery-beat:
+    build: ./backend
+    container_name: repuwatch-celery-beat
+    command: celery -A tasks beat --loglevel=info
+    environment:
+      DB_HOST: repuwatch-db
+      DB_PORT: 5432
+      DB_NAME: repuwatch
+      DB_USER: repuwatch_user
+      DB_PASSWORD: repuwatch_pass
+      REDIS_URL: redis://repuwatch-redis:6379/0
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    depends_on:
+      - repuwatch-db
+      - repuwatch-redis
+    restart: unless-stopped
+
+  repuwatch-frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://repuwatch-backend:8000
+    container_name: repuwatch-frontend
+    ports:
+      - "3001:3000"
+    depends_on:
+      - repuwatch-backend
+    restart: unless-stopped
+
+volumes:
+  repuwatch_pgdata:
