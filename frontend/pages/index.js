@@ -150,7 +150,7 @@ export default function RepuWatch() {
             </div>
 
             <div style={css.sidebarDivider} />
-
+            
             <div style={css.navLabel}>Navigation</div>
             {[
               { id:"dashboard", icon:"⬡", label:"Dashboard" },
@@ -189,6 +189,20 @@ export default function RepuWatch() {
                 animation: pulse ? "pulse 0.8s ease" : "none" }} />
               Mis à jour {lastUpdate}
             </div>
+
+            <div style={{
+              marginTop: '12px',
+              paddingTop: '8px',
+              borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+              fontSize: '10px',
+              color: 'rgba(255, 255, 255, 0.4)',
+              lineHeight: '1.4',
+              fontFamily: 'inherit'
+        }}>
+              <div>Développé par <strong>Malak Benbrahim</strong></div>
+              <div style={{ opacity: 0.7 }}>Stage PFA · 2025–2026</div>
+            </div>
+
           </div>
         </aside>
 
