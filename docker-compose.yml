@@ -69,7 +69,7 @@ services:
     networks:
       - repuwatch-net
     restart: unless-stopped
-
+    
   repuwatch-frontend:
     build:
       context: ./frontend
