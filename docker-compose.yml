@@ -42,8 +42,7 @@ services:
     ports:
       - "8002:8000"
     depends_on:
-      - repuwatch-db:
-          condition: service_healthy
+      - repuwatch-db
     restart: unless-stopped
 
   repuwatch-tasks:
@@ -65,10 +64,8 @@ services:
       ALERT_RECIPIENT: malakbenbrahim2004@gmail.com
       ALERT_THRESHOLD: "40"
     depends_on:
-      repuwatch-db:
-        condition: service_healthy
-      repuwatch-redis:
-        condition: service_started
+      repuwatch-db
+      repuwatch-redis
     networks:
       - repuwatch-net
     restart: unless-stopped
