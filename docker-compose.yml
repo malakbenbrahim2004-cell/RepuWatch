@@ -14,16 +14,17 @@ services:
     ports:
       - "5433:5432"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U repuwatch_user -d repuwatch"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  repuwatch-redis:
-    image: redis:7-alpine
-    container_name: repuwatch-redis
-    ports:
-      - "6380:6379"
-    restart: unless-stopped
 
   repuwatch-backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: repuwatch-backend
     environment:
       DB_HOST: repuwatch-db
@@ -31,7 +32,6 @@ services:
       DB_NAME: repuwatch
       DB_USER: repuwatch_user
       DB_PASSWORD: repuwatch_pass
-      REDIS_URL: redis://repuwatch-redis:6379/0
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       SMTP_HOST: smtp.gmail.com
       SMTP_PORT: 587
@@ -40,57 +40,45 @@ services:
       ALERT_RECIPIENT: malakbenbrahim2004@gmail.com
       ALERT_THRESHOLD: 40
     ports:
-      - "8000:8000"
+      - "8002:8000"
     depends_on:
-      - repuwatch-db
-      - repuwatch-redis
+      - repuwatch-db:
+          condition: service_healthy
     restart: unless-stopped
 
-  repuwatch-celery:
-    build: ./backend
-    container_name: repuwatch-celery
-    command: celery -A tasks worker --loglevel=info -P solo
+  repuwatch-tasks:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: repuwatch-tasks
+    command: python tasks.py
     environment:
       DB_HOST: repuwatch-db
-      DB_PORT: 5432
+      DB_PORT: "5432"
       DB_NAME: repuwatch
       DB_USER: repuwatch_user
       DB_PASSWORD: repuwatch_pass
-      REDIS_URL: redis://repuwatch-redis:6379/0
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       SMTP_HOST: smtp.gmail.com
-      SMTP_PORT: 587
+      SMTP_PORT: "587"
       SMTP_USER: malakbenbrahim2004@gmail.com
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       ALERT_RECIPIENT: malakbenbrahim2004@gmail.com
-      ALERT_THRESHOLD: 40
+      ALERT_THRESHOLD: "40"
     depends_on:
-      - repuwatch-db
-      - repuwatch-redis
-    restart: unless-stopped
-
-  repuwatch-celery-beat:
-    build: ./backend
-    container_name: repuwatch-celery-beat
-    command: celery -A tasks beat --loglevel=info
-    environment:
-      DB_HOST: repuwatch-db
-      DB_PORT: 5432
-      DB_NAME: repuwatch
-      DB_USER: repuwatch_user
-      DB_PASSWORD: repuwatch_pass
-      REDIS_URL: redis://repuwatch-redis:6379/0
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-    depends_on:
-      - repuwatch-db
-      - repuwatch-redis
+      repuwatch-db:
+        condition: service_healthy
+      repuwatch-redis:
+        condition: service_started
+    networks:
+      - repuwatch-net
     restart: unless-stopped
 
   repuwatch-frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://repuwatch-backend:8000
+        NEXT_PUBLIC_API_URL: http://repuwatch-backend:8002
     container_name: repuwatch-frontend
     ports:
       - "3001:3000"
@@ -100,3 +88,7 @@ services:
 
 volumes:
   repuwatch_pgdata:
+
+networks:
+  repuwatch-net:
+    driver: bridge
