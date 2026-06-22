@@ -74,7 +74,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://repuwatch-backend:8002
+        NEXT_PUBLIC_API_URL: http://localhost:8002
     container_name: repuwatch-frontend
     ports:
       - "3001:3000"
